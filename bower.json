@@ -1,0 +1,28 @@
+{
+  "name": "angular-paginate",
+  "version": "0.1.0",
+  "description": "Angular directive that lets you to prevent user interaction with part of the page and display loading/busy indicator (spinner based on spin.js)",
+  "homepage": "https://github.com/darthwade/angular-paginate",
+  "bugs": "https://github.com/darthwade/angular-paginate/issues",
+  "author": {
+    "name": "Vadym Petrychenko",
+    "email": "darthwade@yandex.com",
+    "url": "http://7ninjas.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/darthwade/angular-paginate.git"
+  },
+  "main": "./angular-paginate.js",
+  "ignore": [
+    ".idea",
+    "node_modules",
+    "components"
+  ],
+  "dependencies": {
+    "angular": ">=1.0.8"
+  },
+  "devDependencies": {
+  }
+}
