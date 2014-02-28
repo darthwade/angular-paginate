@@ -183,8 +183,8 @@
           self.$totalPages = Math.ceil(self.$totalCount / self.perPage);
           self.$startIndex = (self.$page - 1) * self.perPage;
           self.$endIndex = self.$startIndex + self.$objects.length;
-          if (!self.$startIndex && self.$endIndex) {
-            self.$startIndex = 1;
+          if (self.$endIndex) {
+            self.$startIndex += 1;
           }
 
           self.$pages = getPages();

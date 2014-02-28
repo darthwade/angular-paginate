@@ -1,4 +1,4 @@
-<ul class="dw-paginate pagination">
+<ul class="dw-paginate pagination" ng-show="paginator.$totalPages > 1">
   <li ng-if="paginator.directionLinks" ng-class="{disabled: !paginator.hasPrevious()}" class="dw-paginate-previous">
     <a href ng-click="paginator.previous()">{{paginator.previousText}}</a>
   </li>

@@ -72,7 +72,7 @@
                 .then(function(numbers) {
                   $scope.numbers = $paginate({
                     $objects: numbers,
-                    $totalCount: numbers.length * 10 + 3,
+                    $totalCount: numbers.length * 10,
                     $page: page,
                     onPageChange: function() {
                       $scope.loadNumbers(this.$page);
