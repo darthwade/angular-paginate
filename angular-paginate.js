@@ -9,212 +9,205 @@
 
   angular.module('darthwade.dwPaginate', [])
 
-    .value('dwLoadingOptions', {
-      active: false, // Defines current loading state
-      text: 'Loading...', // Display text
-      className: '', // Custom class, added to directive
-      overlay: true, // Display overlay
-      spinner: true, // Display spinner
-      spinnerOptions: {
-        lines: 12, // The number of lines to draw
-        length: 7, // The length of each line
-        width: 4, // The line thickness
-        radius: 10, // The radius of the inner circle
-        rotate: 0, // Rotation offset
-        corners: 1, // Roundness (0..1)
-        color: '#000', // #rgb or #rrggbb
-        direction: 1, // 1: clockwise, -1: counterclockwise
-        speed: 2, // Rounds per second
-        trail: 100, // Afterglow percentage
-        opacity: 1 / 4, // Opacity of the lines
-        fps: 20, // Frames per second when using setTimeout()
-        zIndex: 2e9, // Use a high z-index by default
-        className: 'dw-spinner', // CSS class to assign to the element
-        top: 'auto', // Center vertically
-        left: 'auto', // Center horizontally
-        position: 'relative' // Element position
-      }
-    })
+    .provider('$paginate', function () {
+      var provider = this;
 
-    .service('dwLoading', ['$timeout', '$rootScope', 'dwLoadingOptions', function ($timeout, $rootScope, dwLoadingOptions) {
-      var self = this;
+      provider.templateUrl = 'angular-paginate.html';
+      provider.options = {
+        perPage: 10, // Items count per page.
+        range: 5, // Number of pages neighbouring the current page which will be displayed.
+        boundaryLinks: true, // Whether to display First / Last buttons.
+        directionLinks: true, // Whether to display Previous / Next buttons.
+        rotate: true, // Whether to keep current page in the middle of the visible ones.
+        paramName: 'page',
+        previousText: 'Previous', // Text for previous button
+        nextText: 'Next', // Text for next button
+        moreText: '...' // Text for more button
+      };
+
+      provider.$get = function() {
+        var wrapper = function(options) {
+          return new Paginator(options);
+        };
+
+        wrapper.getDefaultOptions = function() {
+          return provider.options;
+        };
+
+        wrapper.getTemplateUrl = function() {
+          return provider.templateUrl;
+        };
+
+        return wrapper;
+      };
 
       /**
        * Overrides default options
-       * @param {object} options
+       * @param {Object} options
        */
-      self.setDefaultOptions = function (options) {
-        extend(true, dwLoadingOptions, options);
+      provider.setDefaultOptions = function (options) {
+        angular.extend(provider.options, options);
       };
 
-      /**
-       * Activates loading state by key
-       * @param {string} key
-       */
-      self.start = function (key) {
-        $timeout(function() {
-          $rootScope.$broadcast('$dwLoadingStart', key);
-        });
+      provider.setTemplateUrl = function (templateUrl) {
+        provider.templateUrl = templateUrl;
       };
 
-      /**
-       * Deactivates loading state by key
-       * @param {string} key
-       */
-      self.finish = function (key) {
-        $timeout(function() {
-          $rootScope.$broadcast('$dwLoadingFinish', key);
-        });
+      var Paginator = function(options) {
+        var self = this;
+        var defaultOptions = {
+          $page: 1,
+          $objects: [],
+          $totalCount: 0,
+          $startIndex: 0,
+          $endIndex: 0,
+          $totalPages: 0,
+
+          onPageChange: angular.noop
+        };
+
+        self.page = function (page) {
+          if (self.$page === page) {
+            return;
+          }
+
+          self.$page = page;
+          calculate();
+
+          if (self.onPageChange) {
+            self.onPageChange.call(self);
+          }
+        };
+
+        self.options = function (options) {
+          angular.extend(self, options);
+        };
+
+        self.previous = function () {
+          if (self.hasPrevious()) {
+            self.page(self.$page - 1);
+          }
+        };
+
+        self.next = function () {
+          if (self.hasNext()) {
+            self.page(self.$page + 1);
+          }
+        };
+
+        self.hasPrevious = function () {
+          return self.$page > 1;
+        };
+
+        self.hasNext = function () {
+          return self.$page < self.$totalPages;
+        };
+
+        // Create page object used in template
+        var makePage = function (number, text, active) {
+          return {
+            number: number,
+            text: text,
+            active: active
+          };
+        };
+
+        var getPages = function () {
+          var pages = [];
+
+          // Default page limits
+          var startPage = 1, endPage = self.$totalPages;
+          var isRanged = self.range < self.$totalPages;
+
+          // recompute if maxSize
+          if (isRanged) {
+            if (self.rotate) {
+              // Current page is displayed in the middle of the visible ones
+              startPage = Math.max(self.$page - Math.floor(self.range / 2), 1);
+              endPage = startPage + self.range - 1;
+
+              // Adjust if limit is exceeded
+              if (endPage > self.$totalPages) {
+                endPage = self.$totalPages;
+                startPage = endPage - self.range + 1;
+              }
+            } else {
+              // Visible pages are paginated with maxSize
+              startPage = ((Math.ceil(self.$page / self.range) - 1) * self.range) + 1;
+
+              // Adjust last page if limit is exceeded
+              endPage = Math.min(startPage + self.range - 1, self.$totalPages);
+            }
+          }
+
+          // Add page number links
+          for (var number = startPage; number <= endPage; number++) {
+            var page = makePage(number, number, number === self.$page);
+            pages.push(page);
+          }
+
+          // Add links to move between page sets
+          if (isRanged) { //  && !self.rotate
+            var margin = self.boundaryLinks ? 1 : 0;
+            if (startPage - margin > 1) {
+              var previousPageSet = makePage(startPage - 1, self.moreText, false);
+              pages.unshift(previousPageSet);
+            }
+
+            if (endPage + margin < self.$totalPages) {
+              var nextPageSet = makePage(endPage + 1, self.moreText, false);
+              pages.push(nextPageSet);
+            }
+          }
+
+          // Add boundary links if needed
+          if (self.boundaryLinks) {
+            if (startPage > 1) {
+              var firstPage = makePage(1, 1, false);
+              pages.unshift(firstPage);
+            }
+
+            if (endPage < self.$totalPages) {
+              var lastPage = makePage(self.$totalPages, self.$totalPages, false);
+              pages.push(lastPage);
+            }
+          }
+
+          return pages;
+        };
+
+        var calculate = function() {
+          self.$page = self.$page || 1;
+          self.$objects = self.$objects || [];
+          self.$totalCount = self.$totalCount || 0;
+          self.$totalPages = Math.ceil(self.$totalCount / self.perPage);
+          self.$startIndex = (self.$page - 1) * self.perPage;
+          self.$endIndex = self.$startIndex + self.$objects.length;
+          if (!self.$startIndex && self.$endIndex) {
+            self.$startIndex = 1;
+          }
+
+          self.$pages = getPages();
+        };
+
+        angular.extend(self, provider.options, defaultOptions, options);
+        calculate();
       };
-    }])
 
-    // Shortcut
-    .factory('$loading', ['dwLoading', function (dwLoading) {
-      return dwLoading;
-    }])
+      return provider;
+    })
 
-    .directive('dwLoading', ['$rootScope', 'dwLoadingOptions', function ($rootScope, dwLoadingOptions) {
+    .directive('dwPaginate', ['$paginate', function ($paginate) {
       return {
+        restrict: 'EA',
+        scope: {
+          paginator: '=dwPaginate'
+        },
+        replace: true,
+        templateUrl: $paginate.getTemplateUrl(),
         link: function (scope, element, attrs) {
-          var spinner = null,
-            key = attrs.dwLoading || false,
-            options,
-            container,
-            body,
-            spinnerContainer,
-            text;
-
-          /**
-           * Starts spinner
-           */
-          var start = function () {
-            if (container) {
-              container.addClass('dw-loading-active');
-            }
-            if (spinner) {
-              spinner.spin(spinnerContainer[0]);
-            }
-          };
-
-          /**
-           * Stops spinner
-           */
-          var finish = function () {
-            if (container) {
-              container.removeClass('dw-loading-active');
-            }
-            if (spinner) {
-              spinner.stop();
-            }
-          };
-
-          scope.$watch(attrs.dwLoadingOptions, function (newOptions) {
-            finish();
-
-            options = extend(true, {}, dwLoadingOptions, newOptions);
-
-            // Build template
-            body = angular.element('<div></div>')
-              .addClass('dw-loading-body');
-            container = angular.element('<div></div>')
-              .addClass('dw-loading')
-              .append(body);
-
-            if (options.overlay) {
-              container.addClass('dw-loading-overlay');
-            }
-            if (options.className) {
-              container.addClass(options.className);
-            }
-            if (options.spinner) {
-              spinnerContainer = angular.element('<div></div>')
-                .addClass('dw-loading-spinner');
-              body.append(spinnerContainer);
-              spinner = new Spinner(options.spinnerOptions);
-            }
-            if (options.text) {
-              text = angular.element('<div></div>')
-                .addClass('dw-loading-text')
-                .text(options.text);
-              body.append(text);
-            }
-
-            element.append(container);
-//            $compile(container)(scope);
-
-            if (options.active || !key) {
-              start();
-            }
-          }, true);
-
-          $rootScope.$on('$dwLoadingStart', function (event, loadKey) {
-            if (loadKey === key) {
-              start();
-            }
-          });
-
-          $rootScope.$on('$dwLoadingFinish', function (event, loadKey) {
-            if (loadKey === key) {
-              finish();
-            }
-          });
-
-          scope.$on('$destroy', function () {
-            finish();
-            spinner = null;
-          });
         }
       };
     }]);
-
-  /**
-   * Extends the destination object `dst` by copying all of the properties from the `src` object(s)
-   * to `dst`. You can specify multiple `src` objects.
-   *
-   * @param   {Boolean} deep If true, the merge becomes recursive (optional)
-   * @param   {Object}  dst  Destination object.
-   * @param   {Object}  src  Source object(s).
-   * @returns {Object}       Reference to `dst`.
-   */
-  function extend(dst) {
-    var deep = false,
-      i = 1;
-
-    if (typeof dst === 'boolean') {
-      deep = dst;
-      dst = arguments[1] || {};
-      i++;
-    }
-
-    angular.forEach([].slice.call(arguments, i), function (obj) {
-      var array, clone, copy, key, src;
-
-      for (key in obj) {
-        src = dst[key];
-        copy = obj[key];
-
-        if (dst === copy) {
-          continue;
-        }
-
-        if (deep && copy && (angular.isObject(copy) ||
-          (array = angular.isArray(copy)))) {
-
-          if (array) {
-            clone = (src && angular.isArray(src)) ? src : [];
-          } else {
-            clone = (src && angular.isObject(src)) ? src : {};
-          }
-
-          dst[key] = extend(deep, clone, copy);
-        }
-        else if (copy !== undefined) {
-          dst[key] = copy;
-        }
-      }
-    });
-
-    return dst;
-  }
 
 }));

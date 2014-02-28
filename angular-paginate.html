@@ -1,0 +1,11 @@
+<ul class="dw-paginate pagination">
+  <li ng-if="paginator.directionLinks" ng-class="{disabled: !paginator.hasPrevious()}" class="dw-paginate-previous">
+    <a href ng-click="paginator.previous()">{{paginator.previousText}}</a>
+  </li>
+  <li ng-repeat="page in paginator.$pages track by $index" ng-class="{active: page.active}" class="dw-paginate-page">
+    <a href ng-click="paginator.page(page.number)">{{page.text}}</a>
+  </li>
+  <li ng-if="paginator.directionLinks" ng-class="{disabled: !paginator.hasNext()}" class="dw-paginate-next">
+    <a href ng-click="paginator.next()">{{paginator.nextText}}</a>
+  </li>
+</ul>
