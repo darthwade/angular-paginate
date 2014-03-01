@@ -1,10 +1,13 @@
-(function(root, factory) {
+(function(factory) {
   /* AMD module */
-  if (typeof define == 'function' && define.amd) define(['angular'], factory)
-
+  if (typeof define == 'function' && define.amd) {
+    define(['angular'], factory);
+  }
   /* Browser global */
-  else factory(window.angular)
-}(this, function(angular) {
+  else {
+    factory(window.angular);
+  }
+}(function(angular) {
   'use strict';
 
   angular.module('darthwade.dwPaginate', [])
