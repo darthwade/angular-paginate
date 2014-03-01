@@ -177,9 +177,9 @@
         };
 
         var calculate = function() {
-          self.$page = self.$page || 1;
+          self.$page = parseInt(self.$page) || 1;
           self.$objects = self.$objects || [];
-          self.$totalCount = self.$totalCount || 0;
+          self.$totalCount = parseInt(self.$totalCount) || 0;
           self.$totalPages = Math.ceil(self.$totalCount / self.perPage);
           self.$startIndex = (self.$page - 1) * self.perPage;
           self.$endIndex = self.$startIndex + self.$objects.length;
