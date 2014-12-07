@@ -1,124 +1,159 @@
 # Angular Paginate
+[![Gittip](http://img.shields.io/gittip/darthwade.svg)](https://www.gittip.com/darthwade/)
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=darthwade&url=https://github.com/darthwade/angular-paginate&title=Angular%20Paginate&language=&tags=github&category=software) 
 
-Angular directive that lets you to prevent user interaction with part of the page and display loading/busy indicator (spinner based on spin.js)
+Most clean, powerful and customizable pagination for angular.
 
-**Demo:** http://embed.plnkr.co/XLL3li/preview
+## Installation
 
-## 1. Getting Started
+Using `bower`:
+```shell 
+$ bower install angular-paginate --save
+```
 
-Install with bower `bower install angular-loading --save` or clone the repo `git clone git://github.com/darthwade/angular-loading.git` or [download the latest release](https://github.com/darthwade/angular-loading/zipball/master).
+Using `git`:
+```shell 
+$ git clone https://github.com/darthwade/angular-paginate.git
+```
 
-Add `angular-loading.min.js` and `angular-loading.css` to your HTML. Also add [spin.js](https://github.com/fgnass/spin.js) library.
+## Requirements & Dependencies
+- Angular
+
+## Usage
+
+Add `angular-paginate.min.js` to your HTML.
 ``` html
 <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/spin.js/1.2.7/spin.min.js"></script>
-<script src="//rawgithub.com/darthwade/angular-loading/master/angular-loading.min.js"></script>
-
-<link rel="stylesheet" type="text/css" href="//rawgithub.com/darthwade/angular-loading/master/angular-loading.css"/>
+<script src="//rawgithub.com/darthwade/angular-paginate/master/angular-paginate.min.js"></script>
 ```
 
-Add `darthwade.dwLoading` as a module dependency for your module.
+Add `darthwade.paginate` as a module dependency for your app.
 ``` javascript
-angular.module('myApp', ['darthwade.dwLoading']);
+angular.module('myApp', ['darthwade.paginate']);
 ```
 
-## 2. Usage
-Add `dw-loading` directive to that block which you want to lock during loading.
+## Example
+
 ``` html
-<div dw-loading="key" dw-loading-options="options"></div>
-```
-## 3. Sample
-``` html
-<div dw-loading="users" dw-loading-options="{text: 'Loading users...'}" class="users-list">
-  <p ng-repeat="user in users">{{user.name}}</p>
+<div ng-controller="MainCtrl">
+  <h1>Numbers List</h1>
+  <div class="numbers">
+    <div ng-repeat="number in numbers.$objects track by $index">Number {{number}}</div>
+  </div>
+
+  <div>{{numbers.$startIndex}}-{{numbers.$endIndex}} of {{numbers.$totalCount}}</div>
+  <div dw-paginate="numbers" class="pagination-sm"></div>
 </div>
 ```
 ``` javascript
-function SampleCtrl($scope, $loading) {
-  $scope.loadUsers = function() {
-    // Lock UI and show spinner
-    $loading.start('users');
-  
-    $http({method: 'GET', url: '/someUrl'})
-        .success(function(data, status, headers, config) {
-          $scope.users = data;
-          
-          // Unlock UI and hide spinner
-          $loading.finish('users');
-        });
-  };
-  
-  $scope.loadUsers();
-}
+  angular.module('demoApp', [
+        'darthwade.paginate'
+      ])
+
+      .config(function($paginateProvider) {
+        $paginateProvider.setTemplateUrl('../angular-paginate.html');
+      })
+
+      .controller('MainCtrl', function ($scope, $q, $timeout, $paginate) {
+
+        var getNumbers = function() {
+          var deferred = $q.defer();
+
+          $timeout(function() {
+            var numbers = [];
+            for (var i = 0; i < 10; i++) {
+              numbers.push(Math.floor(Math.random() * 11));
+            }
+            deferred.resolve(numbers);
+          }, 20);
+
+          return deferred.promise;
+        };
+
+
+        $scope.loadNumbers = function(page) {
+
+          getNumbers()
+              .then(function(numbers) {
+                $scope.numbers = $paginate({
+                  $objects: numbers,
+                  $totalCount: numbers.length * 10,
+                  $page: page,
+                  onPageChange: function() {
+                    $scope.loadNumbers(this.$page);
+                  },
+                  perPage: 10, // Items count per page.
+                  range: 5, // Number of pages neighbouring the current page which will be displayed.
+                  boundaryLinks: true, // Whether to display First / Last buttons.
+                  directionLinks: true, // Whether to display Previous / Next buttons.
+                  rotate: true, // Whether to keep current page in the middle of the visible ones.
+                  paramName: 'page',
+                  previousText: 'Previous', // Text for previous button
+                  nextText: 'Next' // Text for next button
+                });
+              });
+        };
+
+        $scope.loadNumbers(1);
+      });
 ```
 
-## 4. Options
+## Options
+
 ``` javascript
 {
-  active: false, // Defines current loading state
-  text: 'Loading...', // Display text
-  className: '', // Custom class, added to directive
-  overlay: true, // Display overlay
-  spinner: true, // Display spinner
-  spinnerOptions: {
-    lines: 12, // The number of lines to draw
-    length: 7, // The length of each line
-    width: 4, // The line thickness
-    radius: 10, // The radius of the inner circle
-    rotate: 0, // Rotation offset
-    corners: 1, // Roundness (0..1)
-    color: '#000', // #rgb or #rrggbb
-    direction: 1, // 1: clockwise, -1: counterclockwise
-    speed: 2, // Rounds per second
-    trail: 100, // Afterglow percentage
-    opacity: 1 / 4, // Opacity of the lines
-    fps: 20, // Frames per second when using setTimeout()
-    zIndex: 2e9, // Use a high z-index by default
-    className: 'dw-spinner', // CSS class to assign to the element
-    top: 'auto', // Center vertically
-    left: 'auto', // Center horizontally
-    position: 'relative' // Element position
-  }
+  perPage: 10, // Items count per page.
+  range: 5, // Number of pages neighbouring the current page which will be displayed.
+  boundaryLinks: true, // Whether to display First / Last buttons.
+  directionLinks: true, // Whether to display Previous / Next buttons.
+  rotate: true, // Whether to keep current page in the middle of the visible ones.
+  paramName: 'page',
+  previousText: 'Previous', // Text for previous button
+  nextText: 'Next', // Text for next button
+  moreText: '...' // Text for more button
 }
 ```
 
-## 5. API
-This module provide service `dwLoading` (`$loading` just a shortcut).
+## API
 
-`dwLoading.setDefaultOptions(options)` - Overrides default options.
+`$paginateProvider.getDefaultOptions()` - Returns default options.
+`$paginateProvider.getTemplateUrl()` - Returns dw-paginate directive template URL.
+`$paginateProvider.setDefaultOptions(options)` - Overrides default options.
+`$paginateProvider.setTemplateUrl(templateUrl)` - Sets dw-paginate directive template URL.
 
-`dwLoading.start(key)` - Activates loading state by key.
-
-`dwLoading.finish(key)` - Deactivates loading state by key.
-
-## 6. Events
-`$dwLoadingStart` - Fired once the loading is started. The '$rootScope' emits the event.
-``` javascript
-$scope.$on('$dwLoadingStart', function(event, key){ ... });
-```
-
-`$dwLoadingFinish` - Fired once the loading is finished. The '$rootScope' emits the event.
-``` javascript
-$scope.$on('$dwLoadingFinish', function(event, key){ ... });
-```
-
-## 7. Styling
+## Styling
 ``` html
-<div dw-loading="key" dw-loading-options="{className: 'custom-loading', spinnerOptions: {className: 'custom-spinner'}}" class="my-block">
-  <p>Content</p>
-</div>
+<ul class="dw-paginate pagination" ng-show="paginator.$totalPages > 1">
+  <li ng-if="paginator.directionLinks" ng-class="{disabled: !paginator.hasPrevious()}" class="dw-paginate-previous">
+    <a href ng-click="paginator.previous()">{{paginator.previousText}}</a>
+  </li>
+  <li ng-repeat="page in paginator.$pages track by $index" ng-class="{active: page.active}" class="dw-paginate-page">
+    <a href ng-click="paginator.page(page.number)">{{page.text}}</a>
+  </li>
+  <li ng-if="paginator.directionLinks" ng-class="{disabled: !paginator.hasNext()}" class="dw-paginate-next">
+    <a href ng-click="paginator.next()">{{paginator.nextText}}</a>
+  </li>
+</ul>
 ```
-Will generate:
-``` html
-<div dw-loading="key" dw-loading-options="{active: true, text: 'Please Wait...', className: 'custom-loading', spinnerOptions: {className: 'custom-spinner'}}" class="my-block">
-  <p>Content</p>
-  <div class="dw-loading dw-loading-overlay dw-loading-active custom-loading">
-    <div class="dw-loading-body">
-      <div class="dw-loading-spinner">
-        <div class="custom-spinner"></div>
-      </div>
-      <div class="dw-loading-text">Please Wait...</div>
-    </div>
-  </div>
-</div>
+
+## Testing
+```shell 
+$ git clone https://github.com/darthwade/angular-paginate.git
+$ cd angular-paginate
+$ vagrant up
 ```
+
+## Contributing
+In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests and examples for any new or changed functionality.
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
+
+## License
+
+Licensed under the MIT License. See the LICENSE file for details.
+
+Copyright (c) 2014 [Vadym Petrychenko](http://petrychenko.com/)

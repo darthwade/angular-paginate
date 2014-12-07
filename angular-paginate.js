@@ -1,16 +1,25 @@
-(function(factory) {
-  /* AMD module */
-  if (typeof define == 'function' && define.amd) {
+/**
+ * Angular Paginate
+ * @homepage https://github.com/darthwade/angular-paginate
+ * @author Vadym Petrychenko https://github.com/darthwade
+ * @license The MIT License (http://www.opensource.org/licenses/mit-license.php)
+ * @copyright 2014 Vadym Petrychenko
+ */
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD
     define(['angular'], factory);
+  } else if (typeof exports === 'object') {
+    // CommonJS
+    factory(require('angular'));
+  } else {
+    // Browser globals
+    factory(window.angular)
   }
-  /* Browser global */
-  else {
-    factory(window.angular);
-  }
-}(function(angular) {
+}(function (angular) {
   'use strict';
 
-  angular.module('darthwade.dwPaginate', [])
+  angular.module('darthwade.paginate', [])
 
     .provider('$paginate', function () {
       var provider = this;

@@ -38,15 +38,15 @@
     }
   </style>
 
-  <script type="text/javascript" src="../components/angular/angular.js"></script>
+  <script type="text/javascript" src="../bower_components/angular/angular.js"></script>
   <script type="text/javascript" src="../angular-paginate.js"></script>
   <script>
     angular.module('demoApp', [
-          'darthwade.dwPaginate'
+          'darthwade.paginate'
         ])
 
         .config(function($paginateProvider) {
-          $paginateProvider.setTemplateUrl('/angular-paginate/angular-paginate.html');
+          $paginateProvider.setTemplateUrl('../angular-paginate.html');
         })
 
         .controller('MainCtrl', function ($scope, $q, $timeout, $paginate) {
@@ -95,11 +95,16 @@
 </head>
 <body ng-app="demoApp">
 <div ng-controller="MainCtrl">
-
+  <h1>Numbers List</h1>
   <div class="numbers">
-    <p ng-repeat="number in numbers.$objects track by $index">{{number}}</p>
+    <div ng-repeat="number in numbers.$objects track by $index">Number {{number}}<hr></div>
   </div>
 
+
+  <hr>
+  <hr>
+  Pagination: 
+  
   <div>{{numbers.$startIndex}}-{{numbers.$endIndex}} of {{numbers.$totalCount}}</div>
   <div dw-paginate="numbers" class="pagination-sm"></div>
 

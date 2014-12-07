@@ -1,13 +1,13 @@
 {
   "name": "angular-paginate",
-  "version": "0.1.2-0",
+  "version": "1.0.0",
   "description": "Most clean, powerful and customizable pagination for angular.",
   "homepage": "https://github.com/darthwade/angular-paginate",
   "bugs": "https://github.com/darthwade/angular-paginate/issues",
   "author": {
     "name": "Vadym Petrychenko",
-    "email": "darthwade@yandex.com",
-    "url": "http://7ninjas.com"
+    "email": "vadympetrychenko@gmail.com",
+    "url": "http://petrychenko.com"
   },
   "license": "MIT",
   "repository": {
